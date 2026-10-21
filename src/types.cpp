@@ -1,8 +1,9 @@
 #include "scada/types.hpp"
 
 #include <chrono>
-#include <cstdio>
 #include <ctime>
+#include <iomanip>
+#include <sstream>
 
 namespace scada {
 
@@ -38,11 +39,12 @@ std::string format_timestamp(std::int64_t timestamp_ms) {
     localtime_r(&seconds, &local);
 #endif
 
-    char buffer[32];
-    std::snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d.%03d", local.tm_year + 1900,
-                  local.tm_mon + 1, local.tm_mday, local.tm_hour, local.tm_min, local.tm_sec,
-                  millis);
-    return std::string(buffer);
+    std::ostringstream out;
+    out << std::setfill('0') << std::setw(4) << (local.tm_year + 1900) << '-' << std::setw(2)
+        << (local.tm_mon + 1) << '-' << std::setw(2) << local.tm_mday << ' ' << std::setw(2)
+        << local.tm_hour << ':' << std::setw(2) << local.tm_min << ':' << std::setw(2)
+        << local.tm_sec << '.' << std::setw(3) << millis;
+    return out.str();
 }
 
 }  // namespace scada

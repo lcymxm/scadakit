@@ -1,4 +1,5 @@
 #include <chrono>
+#include <limits>
 #include <string>
 #include <thread>
 #include <vector>
@@ -297,5 +298,5 @@ TEST(Gateway, JsonEscapeHandlesQuotesAndControlCharacters) {
 
 TEST(Gateway, JsonNumberNeverEmitsNan) {
     CHECK_EQ(json_number(1.5), std::string{"1.500"});
-    CHECK_EQ(json_number(0.0 / 0.0), std::string{"null"});
+    CHECK_EQ(json_number(std::numeric_limits<double>::quiet_NaN()), std::string{"null"});
 }
