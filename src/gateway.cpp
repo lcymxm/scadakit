@@ -300,7 +300,11 @@ std::string Gateway::snapshot_json() const {
         out << to_string(worst) << "\",\"limits\":[" << (std::isfinite(tag.limits.lolo) ? 1 : 0)
             << ',' << (std::isfinite(tag.limits.lo) ? 1 : 0) << ','
             << (std::isfinite(tag.limits.hi) ? 1 : 0) << ','
-            << (std::isfinite(tag.limits.hihi) ? 1 : 0) << "]}";
+            << (std::isfinite(tag.limits.hihi) ? 1 : 0) << "],\"active\":["
+            << (alarms_.condition_active(i, AlarmLevel::Lolo) ? 1 : 0) << ','
+            << (alarms_.condition_active(i, AlarmLevel::Lo) ? 1 : 0) << ','
+            << (alarms_.condition_active(i, AlarmLevel::Hi) ? 1 : 0) << ','
+            << (alarms_.condition_active(i, AlarmLevel::Hihi) ? 1 : 0) << "]}";
     }
     out << "]}";
     return out.str();

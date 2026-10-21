@@ -164,8 +164,9 @@ function render(snapshot) {
     const flags = card.querySelectorAll(".limits span");
     for (const flag of flags) {
       const index = Number(flag.dataset.l);
-      // limits are [LL, LO, HI, HH] in the API
-      flag.classList.toggle("hit", tag.limits[index] === 1);
+      // The spans are labelled HH, HI, LO, LL from left to right (data-l 0..3)
+      // while the API sends `active` as [LL, LO, HI, HH], so the index flips.
+      flag.classList.toggle("hit", tag.active[3 - index] === 1);
     }
   }
 }
@@ -206,8 +207,19 @@ let seriesCache = [];
 async function pollTrends() {
   if (trendNames.length === 0) {
     const snapshot = await (await fetch("/api/snapshot")).json();
-    // The first few numeric tags make a readable trend panel.
-    trendNames = snapshot.tags.filter(t => t.unit !== "" && t.limits).slice(0, 4).map(t => t.name);
+    // Group by engineering unit and take the largest group. Plotting a
+    // temperature next to a current on one axis produces a flat line at zero,
+    // which is worse than no chart at all.
+    const groups = {};
+    for (const tag of snapshot.tags) {
+      if (!tag.unit) continue;
+      (groups[tag.unit] = groups[tag.unit] || []).push(tag.name);
+    }
+    let best = [];
+    for (const unit in groups) {
+      if (groups[unit].length > best.length) best = groups[unit];
+    }
+    trendNames = (best.length >= 2 ? best : snapshot.tags.map(t => t.name)).slice(0, 4);
     document.getElementById("legend").innerHTML = trendNames.map((name, i) =>
       `<span><i style="background:${COLORS[i % COLORS.length]}"></i>${name}</span>`).join("");
   }
@@ -226,9 +238,9 @@ function drawChart() {
   const width = canvas.width, height = canvas.height;
   ctx.clearRect(0, 0, width, height);
 
-  let longest = 0;
-  for (const series of seriesCache) longest = Math.max(longest, series.length);
-  if (longest < 2) {
+  let samples = 0;
+  for (const series of seriesCache) samples = Math.max(samples, series.length);
+  if (samples < 2) {
     ctx.fillStyle = "#8b96a5";
     ctx.font = "14px system-ui";
     ctx.fillText("采样中…", 16, height / 2);
@@ -237,11 +249,21 @@ function drawChart() {
 
   const pad = 34;
   let low = Infinity, high = -Infinity;
+  let firstTime = Infinity, lastTime = -Infinity;
   for (const series of seriesCache) {
-    for (const point of series) { low = Math.min(low, point[1]); high = Math.max(high, point[1]); }
+    for (const point of series) {
+      low = Math.min(low, point[1]);
+      high = Math.max(high, point[1]);
+      firstTime = Math.min(firstTime, point[0]);
+      lastTime = Math.max(lastTime, point[0]);
+    }
   }
-  if (!isFinite(low)) return;
+  if (!isFinite(low) || !isFinite(firstTime)) return;
   const span = Math.max(high - low, 1e-6);
+  // Horizontal position comes from the timestamp, not the sample index: tags that
+  // change often store more points than steady ones, and indexing would draw
+  // them over different time windows.
+  const timeSpan = Math.max(lastTime - firstTime, 1);
 
   ctx.strokeStyle = "#263041";
   ctx.lineWidth = 1;
@@ -259,7 +281,7 @@ function drawChart() {
     ctx.lineWidth = 1.6;
     ctx.beginPath();
     series.forEach((point, i) => {
-      const x = pad + (width - pad - 8) * i / (longest - 1);
+      const x = pad + (width - pad - 8) * (point[0] - firstTime) / timeSpan;
       const y = pad + (height - 2 * pad) * (1 - (point[1] - low) / span);
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
