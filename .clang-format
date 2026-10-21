@@ -1,0 +1,19 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+IndentWidth: 4
+ColumnLimit: 100
+TabWidth: 4
+UseTab: Never
+BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+PointerAlignment: Left
+SortIncludes: true
+IncludeBlocks: Preserve
+SpacesBeforeTrailingComments: 1
+AlignAfterOpenBracket: Align
+BinPackArguments: true
+BinPackParameters: true

@@ -1,0 +1,148 @@
+# ScadaKit 点表配置
+#
+# 每个 [tag:名称] 段描述一个位号：
+#   description  中文描述（显示在 HMI 上）
+#   unit         工程单位
+#   station      Modbus 从站地址
+#   register     寄存器地址，两种写法任选：
+#                  input:0 / holding:0 / coil:0 / discrete:0   —— 表名:偏移量(从0开始)
+#                  30001 / 40001 / 00001 / 10001                —— 传统五位数写法
+#   type         int16 / uint16 / int32 / uint32 / float32 / bit
+#                （coil 和 discrete 只能是 bit，其它寄存器不能是 bit）
+#   gain         倍率，工程值 = 原始值 * gain + offset
+#   offset       偏移
+#   deadband     变化死区，小于此值的变化不入库
+#   alarm-deadband  报警回差，默认等于 deadband
+#   hihi/hi/lo/lolo  四段报警定值，不写即不报警
+#
+# 对应 src/plant.cpp 里模拟变电站的寄存器表。
+
+[tag:TI-101]
+description = 主变油温
+unit = °C
+station = 1
+register = 30001
+type = int16
+gain = 0.1
+deadband = 0.2
+alarm-deadband = 1.5
+hi = 58
+hihi = 65
+lo = 5
+lolo = 0
+
+[tag:PT-101]
+description = 10kV 母线电压
+unit = kV
+station = 1
+register = input:1
+type = int16
+gain = 0.1
+deadband = 0.05
+alarm-deadband = 0.1
+hi = 10.7
+lo = 10.2
+
+[tag:PT-102]
+description = 主变有功
+unit = MW
+station = 1
+register = input:2
+type = int16
+gain = 0.1
+deadband = 0.1
+
+[tag:CT-101]
+description = 主变电流
+unit = A
+station = 1
+register = input:3
+type = int16
+gain = 0.1
+deadband = 0.5
+hi = 900
+hihi = 1050
+
+[tag:PF-101]
+description = 功率因数
+unit =
+station = 1
+register = input:4
+type = int16
+gain = 0.01
+deadband = 0.005
+lo = 0.90
+lolo = 0.85
+
+[tag:PT-103]
+description = 1号馈线有功
+unit = MW
+station = 1
+register = input:5
+type = int16
+gain = 0.1
+deadband = 0.1
+
+[tag:PT-104]
+description = 2号馈线有功
+unit = MW
+station = 1
+register = input:6
+type = int16
+gain = 0.1
+deadband = 0.1
+
+[tag:TT-101]
+description = 环境温度
+unit = °C
+station = 1
+register = input:7
+type = int16
+gain = 0.1
+deadband = 0.2
+
+[tag:E-101]
+description = 正向有功电量
+unit = kWh
+station = 1
+register = input:8
+type = uint32
+gain = 0.1
+deadband = 0
+
+[tag:QF-101]
+description = 1号馈线断路器
+unit =
+station = 1
+register = discrete:0
+type = bit
+
+[tag:QF-102]
+description = 2号馈线断路器
+unit =
+station = 1
+register = discrete:1
+type = bit
+
+[tag:FN-101]
+description = 主变风机
+unit =
+station = 1
+register = discrete:2
+type = bit
+
+[tag:YA-101]
+description = 事故总信号
+unit =
+station = 1
+register = discrete:3
+type = bit
+
+[tag:SP-101]
+description = 油温报警定值
+unit = °C
+station = 1
+register = holding:0
+type = int16
+gain = 0.1
+deadband = 0.1

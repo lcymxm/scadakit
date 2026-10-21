@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux / gcc (strict)
+            cxx: g++
+            warnings_as_errors: ON
+          - os: ubuntu-latest
+            name: linux / clang
+            cxx: clang++
+            warnings_as_errors: ON
+          - os: windows-latest
+            name: windows / msvc
+            cxx: cl.exe
+            warnings_as_errors: OFF
+          - os: macos-latest
+            name: macos / appleclang
+            cxx: clang++
+            warnings_as_errors: ON
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DSCADAKIT_WARNINGS_AS_ERRORS=${{ matrix.warnings_as_errors }}
+        env:
+          CXX: ${{ matrix.cxx }}
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C Release

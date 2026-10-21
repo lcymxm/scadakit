@@ -1,0 +1,18 @@
+# Build output
+build/
+cmake-build-*/
+out/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime artefacts
+*.csv
+trend.csv
